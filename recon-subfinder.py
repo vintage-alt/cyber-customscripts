@@ -105,7 +105,8 @@ def get_subdomains_subfinder(domains):
             stderr_lines = result.stderr.strip().splitlines()
             for sl in stderr_lines[:5]:  # show first few
                 print(f"    [stderr] {sl}")
-
+                
+        time.sleep(2)  # <-- ADDED: let subfinder fully release file handles
         print(f"[+] subfinder: {len(subdomains)} unique subdomains found.")
 
     except subprocess.TimeoutExpired:
@@ -471,6 +472,7 @@ async def run_pipeline_async(domains):
     all_ips = set()
 
     # Step 1: subfinder
+    time.sleep(1)  # <-- ADDED: brief pause before launching external tool
     all_subdomains = get_subdomains_subfinder(domains)
 
     if not all_subdomains:
@@ -486,6 +488,8 @@ async def run_pipeline_async(domains):
         if ips:
             hostname_to_ips[hostname] = ips
             all_ips.update(ips)
+        time.sleep(0.1)  # <-- ADDED: avoid hammering the resolver
+
 
     if not all_ips:
         print("[-] No IPs resolved.")
@@ -503,6 +507,8 @@ async def run_pipeline_async(domains):
                   f"tags={data.get('tags', [])}")
         else:
             print(f"[*] {ip}: no InternetDB data")
+        time.sleep(1.5)  # <-- ADDED: InternetDB is free/rate-limited; be polite
+
 
     results = {
         "subdomains": all_subdomains,
